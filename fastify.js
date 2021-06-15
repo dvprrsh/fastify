@@ -1,12 +1,11 @@
-'use strict'
+'use strict';
 
-const Avvio = require('avvio')
-const http = require('http')
-const querystring = require('querystring')
-let lightMyRequest
+const Avvio = require('avvio');
+import querystring from 'querystring';
 
-const { version } = require('./package.json')
-const {
+let lightMyRequest;
+
+import {
   kAvvioBoot,
   kChildren,
   kBodyLimit,
@@ -24,128 +23,157 @@ const {
   kOptions,
   kPluginNameChain,
   kSchemaErrorFormatter,
-  kErrorHandler
-} = require('./lib/symbols.js')
+  kErrorHandler,
+} from './lib/symbols.js';
 
-const { createServer } = require('./lib/server')
-const Reply = require('./lib/reply')
-const Request = require('./lib/request')
-const supportedMethods = ['DELETE', 'GET', 'HEAD', 'PATCH', 'POST', 'PUT', 'OPTIONS']
-const decorator = require('./lib/decorate')
-const ContentTypeParser = require('./lib/contentTypeParser')
-const SchemaController = require('./lib/schema-controller')
-const { Hooks, hookRunnerApplication, supportedHooks } = require('./lib/hooks')
-const { createLogger } = require('./lib/logger')
-const pluginUtils = require('./lib/pluginUtils')
-const reqIdGenFactory = require('./lib/reqIdGenFactory')
-const { buildRouting, validateBodyLimitOption } = require('./lib/route')
-const build404 = require('./lib/fourOhFour')
-const getSecuredInitialConfig = require('./lib/initialConfigValidation')
-const override = require('./lib/pluginOverride')
-const warning = require('./lib/warnings')
-const { defaultInitOptions } = getSecuredInitialConfig
+import { createServer } from './lib/server.js';
+import Reply from './lib/reply.js';
+import Request from './lib/request.js';
+const supportedMethods = [
+  'DELETE',
+  'GET',
+  'HEAD',
+  'PATCH',
+  'POST',
+  'PUT',
+  'OPTIONS',
+];
+import decorator from './lib/decorate.js';
+import ContentTypeParser from './lib/contentTypeParser.js';
+import SchemaController from './lib/schema-controller.js';
+import { Hooks, hookRunnerApplication, supportedHooks } from './lib/hooks.js';
+import { createLogger } from './lib/logger.js';
+import pluginUtils from './lib/pluginUtils.js';
+import reqIdGenFactory from './lib/reqIdGenFactory.js';
+import { buildRouting, validateBodyLimitOption } from './lib/route.js';
+import build404 from './lib/fourOhFour.js';
+import getSecuredInitialConfig from './lib/initialConfigValidation.js';
+import override from './lib/pluginOverride.js';
+import warning from './lib/warnings.js';
+const { defaultInitOptions } = getSecuredInitialConfig;
 
-const {
-  FST_ERR_BAD_URL,
-  FST_ERR_MISSING_MIDDLEWARE
-} = require('./lib/errors')
+import { FST_ERR_BAD_URL, FST_ERR_MISSING_MIDDLEWARE } from './lib/errors.js';
 
 const onBadUrlContext = {
-  config: {
-  },
+  config: {},
   onSend: [],
-  onError: []
-}
+  onError: [],
+};
 
-function defaultBuildPrettyMeta (route) {
+function defaultBuildPrettyMeta(route) {
   // return a shallow copy of route's sanitized context
 
-  const cleanKeys = {}
-  const allowedProps = ['errorHandler', 'logLevel', 'logSerializers']
+  const cleanKeys = {};
+  const allowedProps = ['errorHandler', 'logLevel', 'logSerializers'];
 
-  allowedProps.concat(supportedHooks).forEach(k => {
-    cleanKeys[k] = route.store[k]
-  })
+  allowedProps.concat(supportedHooks).forEach((k) => {
+    cleanKeys[k] = route.store[k];
+  });
 
-  return Object.assign({}, cleanKeys)
+  return Object.assign({}, cleanKeys);
 }
 
-function defaultErrorHandler (error, request, reply) {
+function defaultErrorHandler(error, request, reply) {
   if (reply.statusCode < 500) {
-    reply.log.info(
-      { res: reply, err: error },
-      error && error.message
-    )
+    reply.log.info({ res: reply, err: error }, error && error.message);
   } else {
     reply.log.error(
       { req: request, res: reply, err: error },
       error && error.message
-    )
+    );
   }
-  reply.send(error)
+  reply.send(error);
 }
 
-function fastify (options) {
+function fastify(options) {
   // Options validations
-  options = options || {}
+  options = options || {};
 
   if (typeof options !== 'object') {
-    throw new TypeError('Options must be an object')
+    throw new TypeError('Options must be an object');
   }
 
-  if (options.querystringParser && typeof options.querystringParser !== 'function') {
-    throw new Error(`querystringParser option should be a function, instead got '${typeof options.querystringParser}'`)
+  if (
+    options.querystringParser &&
+    typeof options.querystringParser !== 'function'
+  ) {
+    throw new Error(
+      `querystringParser option should be a function, instead got '${typeof options.querystringParser}'`
+    );
   }
 
-  if (options.schemaController && options.schemaController.bucket && typeof options.schemaController.bucket !== 'function') {
-    throw new Error(`schemaController.bucket option should be a function, instead got '${typeof options.schemaController.bucket}'`)
+  if (
+    options.schemaController &&
+    options.schemaController.bucket &&
+    typeof options.schemaController.bucket !== 'function'
+  ) {
+    throw new Error(
+      `schemaController.bucket option should be a function, instead got '${typeof options
+        .schemaController.bucket}'`
+    );
   }
 
-  validateBodyLimitOption(options.bodyLimit)
+  validateBodyLimitOption(options.bodyLimit);
 
-  const requestIdHeader = options.requestIdHeader || defaultInitOptions.requestIdHeader
-  const querystringParser = options.querystringParser || querystring.parse
-  const genReqId = options.genReqId || reqIdGenFactory()
-  const requestIdLogLabel = options.requestIdLogLabel || 'reqId'
-  const bodyLimit = options.bodyLimit || defaultInitOptions.bodyLimit
-  const disableRequestLogging = options.disableRequestLogging || false
-  const exposeHeadRoutes = options.exposeHeadRoutes != null ? options.exposeHeadRoutes : false
+  const requestIdHeader =
+    options.requestIdHeader || defaultInitOptions.requestIdHeader;
+  const querystringParser = options.querystringParser || querystring.parse;
+  const genReqId = options.genReqId || reqIdGenFactory();
+  const requestIdLogLabel = options.requestIdLogLabel || 'reqId';
+  const bodyLimit = options.bodyLimit || defaultInitOptions.bodyLimit;
+  const disableRequestLogging = options.disableRequestLogging || false;
+  const exposeHeadRoutes =
+    options.exposeHeadRoutes != null ? options.exposeHeadRoutes : false;
 
-  const ajvOptions = Object.assign({
-    customOptions: {},
-    plugins: []
-  }, options.ajv)
-  const frameworkErrors = options.frameworkErrors
+  const ajvOptions = Object.assign(
+    {
+      customOptions: {},
+      plugins: [],
+    },
+    options.ajv
+  );
+  const frameworkErrors = options.frameworkErrors;
 
   // Ajv options
-  if (!ajvOptions.customOptions || Object.prototype.toString.call(ajvOptions.customOptions) !== '[object Object]') {
-    throw new Error(`ajv.customOptions option should be an object, instead got '${typeof ajvOptions.customOptions}'`)
+  if (
+    !ajvOptions.customOptions ||
+    Object.prototype.toString.call(ajvOptions.customOptions) !==
+      '[object Object]'
+  ) {
+    throw new Error(
+      `ajv.customOptions option should be an object, instead got '${typeof ajvOptions.customOptions}'`
+    );
   }
   if (!ajvOptions.plugins || !Array.isArray(ajvOptions.plugins)) {
-    throw new Error(`ajv.plugins option should be an array, instead got '${typeof ajvOptions.plugins}'`)
+    throw new Error(
+      `ajv.plugins option should be an array, instead got '${typeof ajvOptions.plugins}'`
+    );
   }
 
   // Instance Fastify components
-  const { logger, hasLogger } = createLogger(options)
+  const { logger, hasLogger } = createLogger(options);
 
   // Update the options with the fixed values
-  options.connectionTimeout = options.connectionTimeout || defaultInitOptions.connectionTimeout
-  options.keepAliveTimeout = options.keepAliveTimeout || defaultInitOptions.keepAliveTimeout
-  options.logger = logger
-  options.genReqId = genReqId
-  options.requestIdHeader = requestIdHeader
-  options.querystringParser = querystringParser
-  options.requestIdLogLabel = requestIdLogLabel
-  options.disableRequestLogging = disableRequestLogging
-  options.ajv = ajvOptions
-  options.clientErrorHandler = options.clientErrorHandler || defaultClientErrorHandler
-  options.exposeHeadRoutes = exposeHeadRoutes
+  options.connectionTimeout =
+    options.connectionTimeout || defaultInitOptions.connectionTimeout;
+  options.keepAliveTimeout =
+    options.keepAliveTimeout || defaultInitOptions.keepAliveTimeout;
+  options.logger = logger;
+  options.genReqId = genReqId;
+  options.requestIdHeader = requestIdHeader;
+  options.querystringParser = querystringParser;
+  options.requestIdLogLabel = requestIdLogLabel;
+  options.disableRequestLogging = disableRequestLogging;
+  options.ajv = ajvOptions;
+  options.clientErrorHandler =
+    options.clientErrorHandler || defaultClientErrorHandler;
+  options.exposeHeadRoutes = exposeHeadRoutes;
 
-  const initialConfig = getSecuredInitialConfig(options)
+  const initialConfig = getSecuredInitialConfig(options);
 
-  let constraints = options.constraints
+  let constraints = options.constraints;
   if (options.versioning) {
-    warning.emit('FSTDEP009')
+    warning.emit('FSTDEP009');
     constraints = {
       ...constraints,
       version: {
@@ -153,13 +181,13 @@ function fastify (options) {
         mustMatchWhenDerived: true,
         storage: options.versioning.storage,
         deriveConstraint: options.versioning.deriveVersion,
-        validate (value) {
+        validate(value) {
           if (typeof value !== 'string') {
-            throw new Error('Version constraint should be a string.')
+            throw new Error('Version constraint should be a string.');
           }
-        }
-      }
-    }
+        },
+      },
+    };
   }
 
   // Default router
@@ -168,25 +196,30 @@ function fastify (options) {
       defaultRoute: defaultRoute,
       onBadUrl: onBadUrl,
       constraints: constraints,
-      ignoreTrailingSlash: options.ignoreTrailingSlash || defaultInitOptions.ignoreTrailingSlash,
-      maxParamLength: options.maxParamLength || defaultInitOptions.maxParamLength,
+      ignoreTrailingSlash:
+        options.ignoreTrailingSlash || defaultInitOptions.ignoreTrailingSlash,
+      maxParamLength:
+        options.maxParamLength || defaultInitOptions.maxParamLength,
       caseSensitive: options.caseSensitive,
-      buildPrettyMeta: defaultBuildPrettyMeta
-    }
-  })
+      buildPrettyMeta: defaultBuildPrettyMeta,
+    },
+  });
 
   // 404 router, used for handling encapsulated 404 handlers
-  const fourOhFour = build404(options)
+  const fourOhFour = build404(options);
 
   // HTTP server and its handler
-  const httpHandler = wrapRouting(router.routing, options)
+  const httpHandler = wrapRouting(router.routing, options);
 
   // we need to set this before calling createServer
-  options.http2SessionTimeout = initialConfig.http2SessionTimeout
-  const { server, listen } = createServer(options, httpHandler)
+  options.http2SessionTimeout = initialConfig.http2SessionTimeout;
+  const { server, listen } = createServer(options, httpHandler);
 
-  const setupResponseListeners = Reply.setupResponseListeners
-  const schemaController = SchemaController.buildSchemaController(null, options.schemaController)
+  const setupResponseListeners = Reply.setupResponseListeners;
+  const schemaController = SchemaController.buildSchemaController(
+    null,
+    options.schemaController
+  );
 
   // Public API
   const fastify = {
@@ -194,7 +227,7 @@ function fastify (options) {
     [kState]: {
       listening: false,
       closing: false,
-      started: false
+      started: false,
     },
     [kOptions]: options,
     [kChildren]: [],
@@ -209,8 +242,9 @@ function fastify (options) {
     [kReplySerializerDefault]: null,
     [kContentTypeParser]: new ContentTypeParser(
       bodyLimit,
-      (options.onProtoPoisoning || defaultInitOptions.onProtoPoisoning),
-      (options.onConstructorPoisoning || defaultInitOptions.onConstructorPoisoning)
+      options.onProtoPoisoning || defaultInitOptions.onProtoPoisoning,
+      options.onConstructorPoisoning ||
+        defaultInitOptions.onConstructorPoisoning
     ),
     [kReply]: Reply.buildReply(Reply),
     [kRequest]: Request.buildRequest(Request, options.trustProxy),
@@ -223,35 +257,41 @@ function fastify (options) {
     getDefaultRoute: router.getDefaultRoute.bind(router),
     setDefaultRoute: router.setDefaultRoute.bind(router),
     // routes shorthand methods
-    delete: function _delete (url, opts, handler) {
-      return router.prepareRoute.call(this, 'DELETE', url, opts, handler)
+    delete: function _delete(url, opts, handler) {
+      return router.prepareRoute.call(this, 'DELETE', url, opts, handler);
     },
-    get: function _get (url, opts, handler) {
-      return router.prepareRoute.call(this, 'GET', url, opts, handler)
+    get: function _get(url, opts, handler) {
+      return router.prepareRoute.call(this, 'GET', url, opts, handler);
     },
-    head: function _head (url, opts, handler) {
-      return router.prepareRoute.call(this, 'HEAD', url, opts, handler)
+    head: function _head(url, opts, handler) {
+      return router.prepareRoute.call(this, 'HEAD', url, opts, handler);
     },
-    patch: function _patch (url, opts, handler) {
-      return router.prepareRoute.call(this, 'PATCH', url, opts, handler)
+    patch: function _patch(url, opts, handler) {
+      return router.prepareRoute.call(this, 'PATCH', url, opts, handler);
     },
-    post: function _post (url, opts, handler) {
-      return router.prepareRoute.call(this, 'POST', url, opts, handler)
+    post: function _post(url, opts, handler) {
+      return router.prepareRoute.call(this, 'POST', url, opts, handler);
     },
-    put: function _put (url, opts, handler) {
-      return router.prepareRoute.call(this, 'PUT', url, opts, handler)
+    put: function _put(url, opts, handler) {
+      return router.prepareRoute.call(this, 'PUT', url, opts, handler);
     },
-    options: function _options (url, opts, handler) {
-      return router.prepareRoute.call(this, 'OPTIONS', url, opts, handler)
+    options: function _options(url, opts, handler) {
+      return router.prepareRoute.call(this, 'OPTIONS', url, opts, handler);
     },
-    all: function _all (url, opts, handler) {
-      return router.prepareRoute.call(this, supportedMethods, url, opts, handler)
+    all: function _all(url, opts, handler) {
+      return router.prepareRoute.call(
+        this,
+        supportedMethods,
+        url,
+        opts,
+        handler
+      );
     },
     // extended route
-    route: function _route (opts) {
+    route: function _route(opts) {
       // we need the fastify object that we are producing so we apply a lazy loading of the function,
       // otherwise we should bind it after the declaration
-      return router.route.call(this, opts)
+      return router.route.call(this, opts);
     },
     // expose logger instance
     log: logger,
@@ -296,50 +336,51 @@ function fastify (options) {
     setNotFoundHandler: setNotFoundHandler,
     setErrorHandler: setErrorHandler,
     // Set fastify initial configuration options read-only object
-    initialConfig
-  }
+    initialConfig,
+  };
 
-  fastify[kReply].prototype.server = fastify
-  fastify[kRequest].prototype.server = fastify
+  fastify[kReply].prototype.server = fastify;
+  fastify[kRequest].prototype.server = fastify;
 
   Object.defineProperties(fastify, {
     pluginName: {
-      get () {
+      get() {
         if (this[kPluginNameChain].length > 1) {
-          return this[kPluginNameChain].join(' -> ')
+          return this[kPluginNameChain].join(' -> ');
         }
-        return this[kPluginNameChain][0]
-      }
+        return this[kPluginNameChain][0];
+      },
     },
     prefix: {
-      get () { return this[kRoutePrefix] }
+      get() {
+        return this[kRoutePrefix];
+      },
     },
     validatorCompiler: {
-      get () { return this[kSchemaController].getValidatorCompiler() }
+      get() {
+        return this[kSchemaController].getValidatorCompiler();
+      },
     },
     serializerCompiler: {
-      get () { return this[kSchemaController].getSerializerCompiler() }
-    },
-    version: {
-      get () {
-        return version
-      }
+      get() {
+        return this[kSchemaController].getSerializerCompiler();
+      },
     },
     errorHandler: {
-      get () {
-        return this[kErrorHandler]
-      }
-    }
-  })
+      get() {
+        return this[kErrorHandler];
+      },
+    },
+  });
 
   // We are adding `use` to the fastify prototype so the user
   // can still access it (and get the expected error), but `decorate`
   // will not detect it, and allow the user to override it.
-  Object.setPrototypeOf(fastify, { use })
+  Object.setPrototypeOf(fastify, { use });
 
   if (options.schemaErrorFormatter) {
-    validateSchemaErrorFormatter(options.schemaErrorFormatter)
-    fastify[kSchemaErrorFormatter] = options.schemaErrorFormatter.bind(fastify)
+    validateSchemaErrorFormatter(options.schemaErrorFormatter);
+    fastify[kSchemaErrorFormatter] = options.schemaErrorFormatter.bind(fastify);
   }
 
   // Install and configure Avvio
@@ -353,33 +394,33 @@ function fastify (options) {
     autostart: false,
     timeout: Number(options.pluginTimeout) || defaultInitOptions.pluginTimeout,
     expose: {
-      use: 'register'
-    }
-  })
+      use: 'register',
+    },
+  });
   // Override to allow the plugin encapsulation
-  avvio.override = override
-  avvio.on('start', () => (fastify[kState].started = true))
-  fastify[kAvvioBoot] = fastify.ready // the avvio ready function
-  fastify.ready = ready // overwrite the avvio ready function
-  fastify.printPlugins = avvio.prettyPrint.bind(avvio)
+  avvio.override = override;
+  avvio.on('start', () => (fastify[kState].started = true));
+  fastify[kAvvioBoot] = fastify.ready; // the avvio ready function
+  fastify.ready = ready; // overwrite the avvio ready function
+  fastify.printPlugins = avvio.prettyPrint.bind(avvio);
 
   // cache the closing value, since we are checking it in an hot path
   avvio.once('preReady', () => {
     fastify.onClose((instance, done) => {
-      fastify[kState].closing = true
-      router.closeRoutes()
+      fastify[kState].closing = true;
+      router.closeRoutes();
       if (fastify[kState].listening) {
         // No new TCP connections are accepted
-        instance.server.close(done)
+        instance.server.close(done);
       } else {
-        done(null)
+        done(null);
       }
-    })
-  })
+    });
+  });
 
   // Set the default 404 handler
-  fastify.setNotFoundHandler()
-  fourOhFour.arrange404(fastify)
+  fastify.setNotFoundHandler();
+  fourOhFour.arrange404(fastify);
 
   router.setup(options, {
     avvio,
@@ -387,288 +428,353 @@ function fastify (options) {
     logger,
     hasLogger,
     setupResponseListeners,
-    throwIfAlreadyStarted
-  })
+    throwIfAlreadyStarted,
+  });
 
   // Delay configuring clientError handler so that it can access fastify state.
-  server.on('clientError', options.clientErrorHandler.bind(fastify))
+  server.on('clientError', options.clientErrorHandler.bind(fastify));
 
-  return fastify
+  return fastify;
 
-  function throwIfAlreadyStarted (msg) {
-    if (fastify[kState].started) throw new Error(msg)
+  function throwIfAlreadyStarted(msg) {
+    if (fastify[kState].started) throw new Error(msg);
   }
 
   // HTTP injection handling
   // If the server is not ready yet, this
   // utility will automatically force it.
-  function inject (opts, cb) {
+  function inject(opts, cb) {
     // lightMyRequest is dynamically laoded as it seems very expensive
     // because of Ajv
     if (lightMyRequest === undefined) {
-      lightMyRequest = require('light-my-request')
+      lightMyRequest = require('light-my-request');
     }
 
     if (fastify[kState].started) {
       if (fastify[kState].closing) {
         // Force to return an error
-        const error = new Error('Server is closed')
+        const error = new Error('Server is closed');
         if (cb) {
-          cb(error)
-          return
+          cb(error);
+          return;
         } else {
-          return Promise.reject(error)
+          return Promise.reject(error);
         }
       }
-      return lightMyRequest(httpHandler, opts, cb)
+      return lightMyRequest(httpHandler, opts, cb);
     }
 
     if (cb) {
-      this.ready(err => {
-        if (err) cb(err, null)
-        else lightMyRequest(httpHandler, opts, cb)
-      })
+      this.ready((err) => {
+        if (err) cb(err, null);
+        else lightMyRequest(httpHandler, opts, cb);
+      });
     } else {
       return lightMyRequest((req, res) => {
         this.ready(function (err) {
           if (err) {
-            res.emit('error', err)
-            return
+            res.emit('error', err);
+            return;
           }
-          httpHandler(req, res)
-        })
-      }, opts)
+          httpHandler(req, res);
+        });
+      }, opts);
     }
   }
 
-  function ready (cb) {
-    let resolveReady
-    let rejectReady
+  function ready(cb) {
+    let resolveReady;
+    let rejectReady;
 
     // run the hooks after returning the promise
-    process.nextTick(runHooks)
+    process.nextTick(runHooks);
 
     if (!cb) {
       return new Promise(function (resolve, reject) {
-        resolveReady = resolve
-        rejectReady = reject
-      })
+        resolveReady = resolve;
+        rejectReady = reject;
+      });
     }
 
-    function runHooks () {
+    function runHooks() {
       // start loading
       fastify[kAvvioBoot]((err, done) => {
         if (err || fastify[kState].started) {
-          manageErr(err)
+          manageErr(err);
         } else {
-          hookRunnerApplication('onReady', fastify[kAvvioBoot], fastify, manageErr)
+          hookRunnerApplication(
+            'onReady',
+            fastify[kAvvioBoot],
+            fastify,
+            manageErr
+          );
         }
-        done()
-      })
+        done();
+      });
     }
 
-    function manageErr (err) {
+    function manageErr(err) {
       if (cb) {
         if (err) {
-          cb(err)
+          cb(err);
         } else {
-          cb(undefined, fastify)
+          cb(undefined, fastify);
         }
       } else {
         if (err) {
-          return rejectReady(err)
+          return rejectReady(err);
         }
-        resolveReady(fastify)
+        resolveReady(fastify);
       }
     }
   }
 
-  function use () {
-    throw new FST_ERR_MISSING_MIDDLEWARE()
+  function use() {
+    throw new FST_ERR_MISSING_MIDDLEWARE();
   }
 
   // wrapper that we expose to the user for hooks handling
-  function addHook (name, fn) {
-    throwIfAlreadyStarted('Cannot call "addHook" when fastify instance is already started!')
+  function addHook(name, fn) {
+    throwIfAlreadyStarted(
+      'Cannot call "addHook" when fastify instance is already started!'
+    );
 
-    if (name === 'onSend' || name === 'preSerialization' || name === 'onError') {
+    if (
+      name === 'onSend' ||
+      name === 'preSerialization' ||
+      name === 'onError'
+    ) {
       if (fn.constructor.name === 'AsyncFunction' && fn.length === 4) {
-        throw new Error('Async function has too many arguments. Async hooks should not use the \'done\' argument.')
+        throw new Error(
+          "Async function has too many arguments. Async hooks should not use the 'done' argument."
+        );
       }
     } else if (name === 'onReady') {
       if (fn.constructor.name === 'AsyncFunction' && fn.length !== 0) {
-        throw new Error('Async function has too many arguments. Async hooks should not use the \'done\' argument.')
+        throw new Error(
+          "Async function has too many arguments. Async hooks should not use the 'done' argument."
+        );
       }
     } else if (name !== 'preParsing') {
       if (fn.constructor.name === 'AsyncFunction' && fn.length === 3) {
-        throw new Error('Async function has too many arguments. Async hooks should not use the \'done\' argument.')
+        throw new Error(
+          "Async function has too many arguments. Async hooks should not use the 'done' argument."
+        );
       }
     }
 
     if (name === 'onClose') {
-      this[kHooks].validate(name, fn)
-      this.onClose(fn)
+      this[kHooks].validate(name, fn);
+      this.onClose(fn);
     } else if (name === 'onReady') {
-      this[kHooks].validate(name, fn)
-      this[kHooks].add(name, fn)
+      this[kHooks].validate(name, fn);
+      this[kHooks].add(name, fn);
     } else {
       this.after((err, done) => {
-        _addHook.call(this, name, fn)
-        done(err)
-      })
+        _addHook.call(this, name, fn);
+        done(err);
+      });
     }
-    return this
+    return this;
 
-    function _addHook (name, fn) {
-      this[kHooks].add(name, fn)
-      this[kChildren].forEach(child => _addHook.call(child, name, fn))
+    function _addHook(name, fn) {
+      this[kHooks].add(name, fn);
+      this[kChildren].forEach((child) => _addHook.call(child, name, fn));
     }
   }
 
   // wrapper that we expose to the user for schemas handling
-  function addSchema (schema) {
-    throwIfAlreadyStarted('Cannot call "addSchema" when fastify instance is already started!')
-    this[kSchemaController].add(schema)
-    this[kChildren].forEach(child => child.addSchema(schema))
-    return this
+  function addSchema(schema) {
+    throwIfAlreadyStarted(
+      'Cannot call "addSchema" when fastify instance is already started!'
+    );
+    this[kSchemaController].add(schema);
+    this[kChildren].forEach((child) => child.addSchema(schema));
+    return this;
   }
 
-  function defaultClientErrorHandler (err, socket) {
+  function defaultClientErrorHandler(err, socket) {
     // In case of a connection reset, the socket has been destroyed and there is nothing that needs to be done.
     // https://github.com/fastify/fastify/issues/2036
     // https://github.com/nodejs/node/issues/33302
     if (err.code === 'ECONNRESET') {
-      return
+      return;
     }
 
     const body = JSON.stringify({
-      error: http.STATUS_CODES['400'],
+      error: 400,
       message: 'Client Error',
-      statusCode: 400
-    })
+      statusCode: 400,
+    });
 
     // Most devs do not know what to do with this error.
     // In the vast majority of cases, it's a network error and/or some
     // config issue on the load balancer side.
-    this.log.trace({ err }, 'client error')
+    this.log.trace({ err }, 'client error');
 
     // If the socket is not writable, there is no reason to try to send data.
     if (socket.writable) {
-      socket.end(`HTTP/1.1 400 Bad Request\r\nContent-Length: ${body.length}\r\nContent-Type: application/json\r\n\r\n${body}`)
+      socket.end(
+        `HTTP/1.1 400 Bad Request\r\nContent-Length: ${body.length}\r\nContent-Type: application/json\r\n\r\n${body}`
+      );
     }
   }
 
   // If the router does not match any route, every request will land here
   // req and res are Node.js core objects
-  function defaultRoute (req, res) {
+  function defaultRoute(req, res) {
     if (req.headers['accept-version'] !== undefined) {
-      req.headers['accept-version'] = undefined
+      req.headers['accept-version'] = undefined;
     }
-    fourOhFour.router.lookup(req, res)
+    fourOhFour.router.lookup(req, res);
   }
 
-  function onBadUrl (path, req, res) {
+  function onBadUrl(path, req, res) {
     if (frameworkErrors) {
-      const id = genReqId(req)
-      const childLogger = logger.child({ reqId: id })
+      const id = genReqId(req);
+      const childLogger = logger.child({ reqId: id });
 
-      childLogger.info({ req }, 'incoming request')
+      childLogger.info({ req }, 'incoming request');
 
-      const request = new Request(id, null, req, null, childLogger, onBadUrlContext)
-      const reply = new Reply(res, request, childLogger)
-      return frameworkErrors(new FST_ERR_BAD_URL(path), request, reply)
+      const request = new Request(
+        id,
+        null,
+        req,
+        null,
+        childLogger,
+        onBadUrlContext
+      );
+      const reply = new Reply(res, request, childLogger);
+      return frameworkErrors(new FST_ERR_BAD_URL(path), request, reply);
     }
-    const body = `{"error":"Bad Request","message":"'${path}' is not a valid url component","statusCode":400}`
+    const body = `{"error":"Bad Request","message":"'${path}' is not a valid url component","statusCode":400}`;
     res.writeHead(400, {
       'Content-Type': 'application/json',
-      'Content-Length': body.length
-    })
-    res.end(body)
+      'Content-Length': body.length,
+    });
+    res.end(body);
   }
 
-  function setNotFoundHandler (opts, handler) {
-    throwIfAlreadyStarted('Cannot call "setNotFoundHandler" when fastify instance is already started!')
+  function setNotFoundHandler(opts, handler) {
+    throwIfAlreadyStarted(
+      'Cannot call "setNotFoundHandler" when fastify instance is already started!'
+    );
 
-    fourOhFour.setNotFoundHandler.call(this, opts, handler, avvio, router.routeHandler)
-    return this
+    fourOhFour.setNotFoundHandler.call(
+      this,
+      opts,
+      handler,
+      avvio,
+      router.routeHandler
+    );
+    return this;
   }
 
-  function setValidatorCompiler (validatorCompiler) {
-    throwIfAlreadyStarted('Cannot call "setValidatorCompiler" when fastify instance is already started!')
-    this[kSchemaController].setValidatorCompiler(validatorCompiler)
-    return this
+  function setValidatorCompiler(validatorCompiler) {
+    throwIfAlreadyStarted(
+      'Cannot call "setValidatorCompiler" when fastify instance is already started!'
+    );
+    this[kSchemaController].setValidatorCompiler(validatorCompiler);
+    return this;
   }
 
-  function setSchemaErrorFormatter (errorFormatter) {
-    throwIfAlreadyStarted('Cannot call "setSchemaErrorFormatter" when fastify instance is already started!')
-    validateSchemaErrorFormatter(errorFormatter)
-    this[kSchemaErrorFormatter] = errorFormatter.bind(this)
-    return this
+  function setSchemaErrorFormatter(errorFormatter) {
+    throwIfAlreadyStarted(
+      'Cannot call "setSchemaErrorFormatter" when fastify instance is already started!'
+    );
+    validateSchemaErrorFormatter(errorFormatter);
+    this[kSchemaErrorFormatter] = errorFormatter.bind(this);
+    return this;
   }
 
-  function setSerializerCompiler (serializerCompiler) {
-    throwIfAlreadyStarted('Cannot call "setSerializerCompiler" when fastify instance is already started!')
-    this[kSchemaController].setSerializerCompiler(serializerCompiler)
-    return this
+  function setSerializerCompiler(serializerCompiler) {
+    throwIfAlreadyStarted(
+      'Cannot call "setSerializerCompiler" when fastify instance is already started!'
+    );
+    this[kSchemaController].setSerializerCompiler(serializerCompiler);
+    return this;
   }
 
-  function setSchemaController (schemaControllerOpts) {
-    throwIfAlreadyStarted('Cannot call "setSchemaController" when fastify instance is already started!')
-    const old = this[kSchemaController]
-    const schemaController = SchemaController.buildSchemaController(old.parent, Object.assign({}, old.opts, schemaControllerOpts))
-    this[kSchemaController] = schemaController
-    this.getSchema = schemaController.getSchema.bind(schemaController)
-    this.getSchemas = schemaController.getSchemas.bind(schemaController)
-    return this
+  function setSchemaController(schemaControllerOpts) {
+    throwIfAlreadyStarted(
+      'Cannot call "setSchemaController" when fastify instance is already started!'
+    );
+    const old = this[kSchemaController];
+    const schemaController = SchemaController.buildSchemaController(
+      old.parent,
+      Object.assign({}, old.opts, schemaControllerOpts)
+    );
+    this[kSchemaController] = schemaController;
+    this.getSchema = schemaController.getSchema.bind(schemaController);
+    this.getSchemas = schemaController.getSchemas.bind(schemaController);
+    return this;
   }
 
-  function setReplySerializer (replySerializer) {
-    throwIfAlreadyStarted('Cannot call "setReplySerializer" when fastify instance is already started!')
+  function setReplySerializer(replySerializer) {
+    throwIfAlreadyStarted(
+      'Cannot call "setReplySerializer" when fastify instance is already started!'
+    );
 
-    this[kReplySerializerDefault] = replySerializer
-    return this
+    this[kReplySerializerDefault] = replySerializer;
+    return this;
   }
 
   // wrapper that we expose to the user for configure the custom error handler
-  function setErrorHandler (func) {
-    throwIfAlreadyStarted('Cannot call "setErrorHandler" when fastify instance is already started!')
+  function setErrorHandler(func) {
+    throwIfAlreadyStarted(
+      'Cannot call "setErrorHandler" when fastify instance is already started!'
+    );
 
-    this[kErrorHandler] = func.bind(this)
-    return this
+    this[kErrorHandler] = func.bind(this);
+    return this;
   }
 
-  function printRoutes (opts = {}) {
+  function printRoutes(opts = {}) {
     // includeHooks:true - shortcut to include all supported hooks exported by fastify.Hooks
-    opts.includeMeta = opts.includeHooks ? opts.includeMeta ? supportedHooks.concat(opts.includeMeta) : supportedHooks : opts.includeMeta
-    return router.printRoutes(opts)
+    opts.includeMeta = opts.includeHooks
+      ? opts.includeMeta
+        ? supportedHooks.concat(opts.includeMeta)
+        : supportedHooks
+      : opts.includeMeta;
+    return router.printRoutes(opts);
   }
 }
 
-function validateSchemaErrorFormatter (schemaErrorFormatter) {
+function validateSchemaErrorFormatter(schemaErrorFormatter) {
   if (typeof schemaErrorFormatter !== 'function') {
-    throw new Error(`schemaErrorFormatter option should be a function, instead got ${typeof schemaErrorFormatter}`)
+    throw new Error(
+      `schemaErrorFormatter option should be a function, instead got ${typeof schemaErrorFormatter}`
+    );
   } else if (schemaErrorFormatter.constructor.name === 'AsyncFunction') {
-    throw new Error('schemaErrorFormatter option should not be an async function')
+    throw new Error(
+      'schemaErrorFormatter option should not be an async function'
+    );
   }
 }
 
-function wrapRouting (httpHandler, { rewriteUrl, logger }) {
+function wrapRouting(httpHandler, { rewriteUrl, logger }) {
   if (!rewriteUrl) {
-    return httpHandler
+    return httpHandler;
   }
-  return function preRouting (req, res) {
-    const originalUrl = req.url
-    const url = rewriteUrl(req)
+  return function preRouting(req, res) {
+    const originalUrl = req.url;
+    const url = rewriteUrl(req);
     if (originalUrl !== url) {
-      logger.debug({ originalUrl, url }, 'rewrite url')
+      logger.debug({ originalUrl, url }, 'rewrite url');
       if (typeof url === 'string') {
-        req.url = url
+        req.url = url;
       } else {
-        req.destroy(new Error(`Rewrite url for "${req.url}" needs to be of type "string" but received "${typeof url}"`))
+        req.destroy(
+          new Error(
+            `Rewrite url for "${
+              req.url
+            }" needs to be of type "string" but received "${typeof url}"`
+          )
+        );
       }
     }
-    httpHandler(req, res)
-  }
+    httpHandler(req, res);
+  };
 }
 
 /**
@@ -682,6 +788,5 @@ function wrapRouting (httpHandler, { rewriteUrl, logger }) {
  * - `import fastify from 'fastify'`
  * - `import fastify, { TSC_definition } from 'fastify'`
  */
-module.exports = fastify
-module.exports.fastify = fastify
-module.exports.default = fastify
+export { fastify };
+export default fastify;

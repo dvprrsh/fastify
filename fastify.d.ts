@@ -1,22 +1,30 @@
-import * as http from 'http'
-import * as http2 from 'http2'
-import * as https from 'https'
-import { ConstraintStrategy, HTTPVersion } from 'find-my-way'
-
-import { FastifyRequest, RequestGenericInterface } from './types/request'
-import { RawServerBase, RawServerDefault, RawRequestDefaultExpression, RawReplyDefaultExpression } from './types/utils'
-import { FastifyLoggerInstance, FastifyLoggerOptions } from './types/logger'
-import { FastifyInstance } from './types/instance'
-import { FastifyServerFactory } from './types/serverFactory'
-import { Options as AjvOptions } from '@fastify/ajv-compiler'
-import { FastifyError } from 'fastify-error'
-import { FastifyReply } from './types/reply'
-import { FastifySchemaValidationError } from './types/schema'
-import { ConstructorAction, ProtoAction } from "./types/content-type-parser";
-import { Socket } from 'net'
+import * as http from "http/mod.ts";
+import { ConstraintStrategy, HTTPVersion } from "find-my-way";
+import { FastifyRequest, RequestGenericInterface } from "./types/request.d.ts";
+import {
+  RawReplyDefaultExpression,
+  RawRequestDefaultExpression,
+  RawServerBase,
+  RawServerDefault,
+} from "./types/utils.d.ts";
+import {
+  FastifyLoggerInstance,
+  FastifyLoggerOptions,
+} from "./types/logger.d.ts";
+import { FastifyInstance } from "./types/instance.d.ts";
+import { FastifyServerFactory } from "./types/serverFactory.d.ts";
+import { Options as AjvOptions } from "@fastify/ajv-compiler";
+import { FastifyError } from "fastify-error";
+import { FastifyReply } from "./types/reply.d.ts";
+import { FastifySchemaValidationError } from "./types/schema.d.ts";
+import {
+  ConstructorAction,
+  ProtoAction,
+} from "./types/content-type-parser.d.ts";
+import { Socket } from "net";
 
 /**
- * Fastify factory function for the standard fastify http, https, or http2 server instance.
+ * Fastify factory function for the standard fastify http, http, or http server instance.
  *
  * The default function utilizes http
  *
@@ -24,126 +32,176 @@ import { Socket } from 'net'
  * @returns Fastify server instance
  */
 declare function fastify<
-  Server extends http2.Http2SecureServer,
-  Request extends RawRequestDefaultExpression<Server> = RawRequestDefaultExpression<Server>,
-  Reply extends RawReplyDefaultExpression<Server> = RawReplyDefaultExpression<Server>,
-  Logger extends FastifyLoggerInstance = FastifyLoggerInstance
->(opts: FastifyHttp2SecureOptions<Server, Logger>): FastifyInstance<Server, Request, Reply, Logger> & PromiseLike<FastifyInstance<Server, Request, Reply, Logger>>
-declare function fastify<
-  Server extends http2.Http2Server,
-  Request extends RawRequestDefaultExpression<Server> = RawRequestDefaultExpression<Server>,
-  Reply extends RawReplyDefaultExpression<Server> = RawReplyDefaultExpression<Server>,
-  Logger extends FastifyLoggerInstance = FastifyLoggerInstance
->(opts: FastifyHttp2Options<Server, Logger>): FastifyInstance<Server, Request, Reply, Logger> & PromiseLike<FastifyInstance<Server, Request, Reply, Logger>>
-declare function fastify<
-  Server extends https.Server,
-  Request extends RawRequestDefaultExpression<Server> = RawRequestDefaultExpression<Server>,
-  Reply extends RawReplyDefaultExpression<Server> = RawReplyDefaultExpression<Server>,
-  Logger extends FastifyLoggerInstance = FastifyLoggerInstance
->(opts: FastifyHttpsOptions<Server, Logger>): FastifyInstance<Server, Request, Reply, Logger> & PromiseLike<FastifyInstance<Server, Request, Reply, Logger>>
+  Server extends http.Server,
+  Request extends RawRequestDefaultExpression<Server> =
+    RawRequestDefaultExpression<Server>,
+  Reply extends RawReplyDefaultExpression<Server> = RawReplyDefaultExpression<
+    Server
+  >,
+  Logger extends FastifyLoggerInstance = FastifyLoggerInstance,
+>(
+  opts: FastifyHttp2SecureOptions<Server, Logger>,
+):
+  & FastifyInstance<Server, Request, Reply, Logger>
+  & PromiseLike<FastifyInstance<Server, Request, Reply, Logger>>;
 declare function fastify<
   Server extends http.Server,
-  Request extends RawRequestDefaultExpression<Server> = RawRequestDefaultExpression<Server>,
-  Reply extends RawReplyDefaultExpression<Server> = RawReplyDefaultExpression<Server>,
-  Logger extends FastifyLoggerInstance = FastifyLoggerInstance
->(opts?: FastifyServerOptions<Server, Logger>): FastifyInstance<Server, Request, Reply, Logger> & PromiseLike<FastifyInstance<Server, Request, Reply, Logger>>
-export default fastify
+  Request extends RawRequestDefaultExpression<Server> =
+    RawRequestDefaultExpression<Server>,
+  Reply extends RawReplyDefaultExpression<Server> = RawReplyDefaultExpression<
+    Server
+  >,
+  Logger extends FastifyLoggerInstance = FastifyLoggerInstance,
+>(
+  opts: FastifyHttp2Options<Server, Logger>,
+):
+  & FastifyInstance<Server, Request, Reply, Logger>
+  & PromiseLike<FastifyInstance<Server, Request, Reply, Logger>>;
+declare function fastify<
+  Server extends http.Server,
+  Request extends RawRequestDefaultExpression<Server> =
+    RawRequestDefaultExpression<Server>,
+  Reply extends RawReplyDefaultExpression<Server> = RawReplyDefaultExpression<
+    Server
+  >,
+  Logger extends FastifyLoggerInstance = FastifyLoggerInstance,
+>(
+  opts: FastifyHttpsOptions<Server, Logger>,
+):
+  & FastifyInstance<Server, Request, Reply, Logger>
+  & PromiseLike<FastifyInstance<Server, Request, Reply, Logger>>;
+declare function fastify<
+  Server extends http.Server,
+  Request extends RawRequestDefaultExpression<Server> =
+    RawRequestDefaultExpression<Server>,
+  Reply extends RawReplyDefaultExpression<Server> = RawReplyDefaultExpression<
+    Server
+  >,
+  Logger extends FastifyLoggerInstance = FastifyLoggerInstance,
+>(
+  opts?: FastifyServerOptions<Server, Logger>,
+):
+  & FastifyInstance<Server, Request, Reply, Logger>
+  & PromiseLike<FastifyInstance<Server, Request, Reply, Logger>>;
+export default fastify;
 
 export type FastifyHttp2SecureOptions<
-  Server extends http2.Http2SecureServer,
-  Logger extends FastifyLoggerInstance = FastifyLoggerInstance
+  Server extends http.Server,
+  Logger extends FastifyLoggerInstance = FastifyLoggerInstance,
 > = FastifyServerOptions<Server, Logger> & {
-  http2: true,
-  https: http2.SecureServerOptions
-}
+  http2: true;
+  https: http.HTTPSOptions;
+};
 
 export type FastifyHttp2Options<
-  Server extends http2.Http2Server,
-  Logger extends FastifyLoggerInstance = FastifyLoggerInstance
+  Server extends http.Server,
+  Logger extends FastifyLoggerInstance = FastifyLoggerInstance,
 > = FastifyServerOptions<Server, Logger> & {
-  http2: true,
-  http2SessionTimeout?: number,
-}
+  http2: true;
+  http2SessionTimeout?: number;
+};
 
 export type FastifyHttpsOptions<
-  Server extends https.Server,
-  Logger extends FastifyLoggerInstance = FastifyLoggerInstance
+  Server extends http.Server,
+  Logger extends FastifyLoggerInstance = FastifyLoggerInstance,
 > = FastifyServerOptions<Server, Logger> & {
-  https: https.ServerOptions
-}
+  https: http.HTTPOptions;
+};
 
-type FindMyWayVersion<RawServer extends RawServerBase> = RawServer extends http.Server ? HTTPVersion.V1 : HTTPVersion.V2
+type FindMyWayVersion<RawServer extends RawServerBase> = RawServer extends
+  http.Server ? HTTPVersion.V1 : HTTPVersion.V2;
 
 export interface ConnectionError extends Error {
-  code: string,
-  bytesParsed: number,
+  code: string;
+  bytesParsed: number;
   rawPacket: {
-    type: string,
-    data: number[]
-  }
+    type: string;
+    data: number[];
+  };
 }
 
 /**
- * Options for a fastify server instance. Utilizes conditional logic on the generic server parameter to enforce certain https and http2
+ * Options for a fastify server instance. Utilizes conditional logic on the generic server parameter to enforce certain http and http
  */
 export type FastifyServerOptions<
   RawServer extends RawServerBase = RawServerDefault,
-  Logger extends FastifyLoggerInstance = FastifyLoggerInstance
+  Logger extends FastifyLoggerInstance = FastifyLoggerInstance,
 > = {
-  ignoreTrailingSlash?: boolean,
-  connectionTimeout?: number,
-  keepAliveTimeout?: number,
-  pluginTimeout?: number,
-  bodyLimit?: number,
-  maxParamLength?: number,
-  disableRequestLogging?: boolean,
-  exposeHeadRoutes?: boolean,
-  onProtoPoisoning?: ProtoAction,
-  onConstructorPoisoning?: ConstructorAction,
-  logger?: boolean | FastifyLoggerOptions<RawServer> | Logger,
-  serverFactory?: FastifyServerFactory<RawServer>,
-  caseSensitive?: boolean,
-  requestIdHeader?: string,
+  ignoreTrailingSlash?: boolean;
+  connectionTimeout?: number;
+  keepAliveTimeout?: number;
+  pluginTimeout?: number;
+  bodyLimit?: number;
+  maxParamLength?: number;
+  disableRequestLogging?: boolean;
+  exposeHeadRoutes?: boolean;
+  onProtoPoisoning?: ProtoAction;
+  onConstructorPoisoning?: ConstructorAction;
+  logger?: boolean | FastifyLoggerOptions<RawServer> | Logger;
+  serverFactory?: FastifyServerFactory<RawServer>;
+  caseSensitive?: boolean;
+  requestIdHeader?: string;
   requestIdLogLabel?: string;
-  genReqId?: <RequestGeneric extends RequestGenericInterface = RequestGenericInterface>(req: FastifyRequest<RequestGeneric, RawServer, RawRequestDefaultExpression<RawServer>>) => string,
-  trustProxy?: boolean | string | string[] | number | TrustProxyFunction,
-  querystringParser?: (str: string) => { [key: string]: unknown },
+  genReqId?: <
+    RequestGeneric extends RequestGenericInterface = RequestGenericInterface,
+  >(
+    req: FastifyRequest<
+      RequestGeneric,
+      RawServer,
+      RawRequestDefaultExpression<RawServer>
+    >,
+  ) => string;
+  trustProxy?: boolean | string | string[] | number | TrustProxyFunction;
+  querystringParser?: (str: string) => { [key: string]: unknown };
   /**
    * @deprecated Prefer using the `constraints.version` property
    */
   versioning?: {
     storage(): {
-      get(version: string): string | null,
-      set(version: string, store: Function): void
-      del(version: string): void,
-      empty(): void
-    },
-    deriveVersion<Context>(req: Object, ctx?: Context): string // not a fan of using Object here. Also what is Context? Can either of these be better defined?
-  },
+      get(version: string): string | null;
+      set(version: string, store: Function): void;
+      del(version: string): void;
+      empty(): void;
+    };
+    deriveVersion<Context>(req: Object, ctx?: Context): string; // not a fan of using Object here. Also what is Context? Can either of these be better defined?
+  };
   constraints?: {
-    [name: string]: ConstraintStrategy<FindMyWayVersion<RawServer>>,
-  },
-  return503OnClosing?: boolean,
+    [name: string]: ConstraintStrategy<FindMyWayVersion<RawServer>>;
+  };
+  return503OnClosing?: boolean;
   ajv?: {
-    customOptions?: AjvOptions,
-    plugins?: Function[]
-  },
-  frameworkErrors?: <RequestGeneric extends RequestGenericInterface = RequestGenericInterface>(
+    customOptions?: AjvOptions;
+    plugins?: Function[];
+  };
+  frameworkErrors?: <
+    RequestGeneric extends RequestGenericInterface = RequestGenericInterface,
+  >(
     error: FastifyError,
-    req: FastifyRequest<RequestGeneric, RawServer, RawRequestDefaultExpression<RawServer>>,
-    res: FastifyReply<RawServer, RawRequestDefaultExpression<RawServer>, RawReplyDefaultExpression<RawServer>>
-  ) => void,
-  rewriteUrl?: (req: RawRequestDefaultExpression<RawServer>) => string,
-  schemaErrorFormatter?: (errors: FastifySchemaValidationError[], dataVar: string) => Error,
+    req: FastifyRequest<
+      RequestGeneric,
+      RawServer,
+      RawRequestDefaultExpression<RawServer>
+    >,
+    res: FastifyReply<
+      RawServer,
+      RawRequestDefaultExpression<RawServer>,
+      RawReplyDefaultExpression<RawServer>
+    >,
+  ) => void;
+  rewriteUrl?: (req: RawRequestDefaultExpression<RawServer>) => string;
+  schemaErrorFormatter?: (
+    errors: FastifySchemaValidationError[],
+    dataVar: string,
+  ) => Error;
   /**
    * listener to error events emitted by client connections
    */
-  clientErrorHandler?: (error: ConnectionError, socket: Socket) => void
-}
+  clientErrorHandler?: (error: ConnectionError, socket: Socket) => void;
+};
 
-type TrustProxyFunction = (address: string, hop: number) => boolean
+type TrustProxyFunction = (address: string, hop: number) => boolean;
 
-declare module 'fastify-error' {
+declare module "fastify-error" {
   interface FastifyError {
     validation?: ValidationResult[];
   }
@@ -158,19 +216,63 @@ export interface ValidationResult {
 }
 
 /* Export all additional types */
-export type { Chain as LightMyRequestChain, InjectOptions, Response as LightMyRequestResponse, CallbackFunc as LightMyRequestCallback } from 'light-my-request'
-export { FastifyRequest, RequestGenericInterface } from './types/request'
-export { FastifyReply } from './types/reply'
-export { FastifyPluginCallback, FastifyPluginAsync, FastifyPluginOptions, FastifyPlugin } from './types/plugin'
-export { FastifyInstance } from './types/instance'
-export { FastifyLoggerOptions, FastifyLoggerInstance, FastifyLogFn, LogLevel } from './types/logger'
-export { FastifyContext, FastifyContextConfig } from './types/context'
-export { RouteHandler, RouteHandlerMethod, RouteOptions, RouteShorthandMethod, RouteShorthandOptions, RouteShorthandOptionsWithHandler } from './types/route'
-export * from './types/register'
-export { FastifyBodyParser, FastifyContentTypeParser, AddContentTypeParser, hasContentTypeParser, getDefaultJsonParser, ProtoAction, ConstructorAction } from './types/content-type-parser'
-export { FastifyError } from 'fastify-error'
-export { FastifySchema, FastifySchemaCompiler } from './types/schema'
-export { HTTPMethods, RawServerBase, RawRequestDefaultExpression, RawReplyDefaultExpression, RawServerDefault, ContextConfigDefault, RequestBodyDefault, RequestQuerystringDefault, RequestParamsDefault, RequestHeadersDefault } from './types/utils'
-export * from './types/hooks'
-export { FastifyServerFactory, FastifyServerFactoryHandler } from './types/serverFactory'
-export { fastify }
+export {
+  CallbackFunc as LightMyRequestCallback,
+  Chain as LightMyRequestChain,
+  InjectOptions,
+  Response as LightMyRequestResponse,
+} from "light-my-request";
+export { FastifyRequest, RequestGenericInterface } from "./types/request.d.ts";
+export { FastifyReply } from "./types/reply.d.ts";
+export {
+  FastifyPlugin,
+  FastifyPluginAsync,
+  FastifyPluginCallback,
+  FastifyPluginOptions,
+} from "./types/plugin.d.ts";
+export { FastifyInstance } from "./types/instance.d.ts";
+export {
+  FastifyLogFn,
+  FastifyLoggerInstance,
+  FastifyLoggerOptions,
+  LogLevel,
+} from "./types/logger.d.ts";
+export { FastifyContext, FastifyContextConfig } from "./types/context.d.ts";
+export {
+  RouteHandler,
+  RouteHandlerMethod,
+  RouteOptions,
+  RouteShorthandMethod,
+  RouteShorthandOptions,
+  RouteShorthandOptionsWithHandler,
+} from "./types/route.d.ts";
+export * from "./types/register.d.ts";
+export {
+  AddContentTypeParser,
+  ConstructorAction,
+  FastifyBodyParser,
+  FastifyContentTypeParser,
+  getDefaultJsonParser,
+  hasContentTypeParser,
+  ProtoAction,
+} from "./types/content-type-parser.d.ts";
+export { FastifyError } from "fastify-error";
+export { FastifySchema, FastifySchemaCompiler } from "./types/schema.d.ts";
+export {
+  ContextConfigDefault,
+  HTTPMethods,
+  RawReplyDefaultExpression,
+  RawRequestDefaultExpression,
+  RawServerBase,
+  RawServerDefault,
+  RequestBodyDefault,
+  RequestHeadersDefault,
+  RequestParamsDefault,
+  RequestQuerystringDefault,
+} from "./types/utils.d.ts";
+export * from "./types/hooks.d.ts";
+export {
+  FastifyServerFactory,
+  FastifyServerFactoryHandler,
+} from "./types/serverFactory.d.ts";
+export { fastify };

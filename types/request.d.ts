@@ -1,6 +1,14 @@
-import { FastifyLoggerInstance } from './logger'
-import { RawServerBase, RawServerDefault, RawRequestDefaultExpression, RequestBodyDefault, RequestQuerystringDefault, RequestParamsDefault, RequestHeadersDefault } from './utils'
-import { RouteGenericInterface } from './route'
+import { FastifyLoggerInstance } from "./logger.d.ts";
+import {
+  RawRequestDefaultExpression,
+  RawServerBase,
+  RawServerDefault,
+  RequestBodyDefault,
+  RequestHeadersDefault,
+  RequestParamsDefault,
+  RequestQuerystringDefault,
+} from "./utils.d.ts";
+import { RouteGenericInterface } from "./route.d.ts";
 
 export interface RequestGenericInterface {
   Body?: RequestBodyDefault;
@@ -16,14 +24,15 @@ export interface RequestGenericInterface {
 export interface FastifyRequest<
   RouteGeneric extends RouteGenericInterface = RouteGenericInterface,
   RawServer extends RawServerBase = RawServerDefault,
-  RawRequest extends RawRequestDefaultExpression<RawServer> = RawRequestDefaultExpression<RawServer>,
+  RawRequest extends RawRequestDefaultExpression<RawServer> =
+    RawRequestDefaultExpression<RawServer>,
 > {
   id: any;
-  params: RouteGeneric['Params'];
+  params: RouteGeneric["Params"];
   raw: RawRequest;
-  query: RouteGeneric['Querystring'];
+  query: RouteGeneric["Querystring"];
   log: FastifyLoggerInstance;
-  body: RouteGeneric['Body'];
+  body: RouteGeneric["Body"];
 
   /** in order for this to be used the user should ensure they have set the attachValidation option. */
   validationError?: Error & { validation: any; validationContext: string };
@@ -32,19 +41,19 @@ export interface FastifyRequest<
    * @deprecated Use `raw` property
    */
   readonly req: RawRequest;
-  readonly headers: RawRequest['headers'] & RouteGeneric['Headers']; // this enables the developer to extend the existing http(s|2) headers list
+  readonly headers: RawRequest["headers"] & RouteGeneric["Headers"]; // this enables the developer to extend the existing http(s|2) headers list
   readonly ip: string;
   readonly ips?: string[];
   readonly hostname: string;
   readonly url: string;
-  readonly protocol: 'http' | 'https';
+  readonly protocol: "http" | "https";
   readonly method: string;
   readonly routerPath: string;
   readonly routerMethod: string;
   readonly is404: boolean;
-  readonly socket: RawRequest['socket'];
+  readonly socket: RawRequest["conn"];
 
   // Prefer `socket` over deprecated `connection` property in node 13.0.0 or higher
   // @deprecated
-  readonly connection: RawRequest['socket'];
+  readonly connection: RawRequest["conn"];
 }

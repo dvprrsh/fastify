@@ -26,13 +26,17 @@ export interface FastifySchemaValidationError {
 }
 
 export interface FastifyValidationResult {
-  (data: any): boolean | PromiseLike<any> | { error?: Error, value?: any }
+  (data: any): boolean | PromiseLike<any> | { error?: Error; value?: any };
   errors?: FastifySchemaValidationError[] | null;
 }
 
 /**
  * Compiler for FastifySchema Type
  */
-export type FastifySchemaCompiler<T> = (routeSchema: FastifyRouteSchemaDef<T>) => FastifyValidationResult
+export type FastifySchemaCompiler<T> = (
+  routeSchema: FastifyRouteSchemaDef<T>,
+) => FastifyValidationResult;
 
-export type FastifySerializerCompiler<T> = (routeSchema: FastifyRouteSchemaDef<T>) => (data: any) => string
+export type FastifySerializerCompiler<T> = (
+  routeSchema: FastifyRouteSchemaDef<T>,
+) => (data: any) => string;

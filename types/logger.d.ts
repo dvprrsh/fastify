@@ -17,12 +17,16 @@
  * https://github.com/fastify/fastify/pull/1532
  * https://github.com/fastify/fastify/issues/649
  */
-
-import { FastifyError } from 'fastify-error'
-import { RawServerBase, RawServerDefault, RawRequestDefaultExpression, RawReplyDefaultExpression } from './utils'
-import { RouteGenericInterface } from './route'
-import { FastifyRequest } from './request'
-import { FastifyReply } from './reply'
+import { FastifyError } from "fastify-error";
+import {
+  RawReplyDefaultExpression,
+  RawRequestDefaultExpression,
+  RawServerBase,
+  RawServerDefault,
+} from "./utils.d.ts";
+import { RouteGenericInterface } from "./route.d.ts";
+import { FastifyRequest } from "./request.d.ts";
+import { FastifyReply } from "./reply.d.ts";
 
 /**
  * Standard Fastify logging function
@@ -32,7 +36,7 @@ export interface FastifyLogFn {
   (obj: unknown, msg?: string, ...args: unknown[]): void;
 }
 
-export type LogLevel = 'info' | 'error' | 'debug' | 'fatal' | 'warn' | 'trace'
+export type LogLevel = "info" | "error" | "debug" | "fatal" | "warn" | "trace";
 
 export type SerializerFn = (value: unknown) => unknown;
 
@@ -116,8 +120,24 @@ export interface PrettyOptions {
  */
 export interface FastifyLoggerOptions<
   RawServer extends RawServerBase = RawServerDefault,
-  RawRequest extends FastifyRequest<RouteGenericInterface, RawServer, RawRequestDefaultExpression<RawServer>> = FastifyRequest<RouteGenericInterface, RawServer, RawRequestDefaultExpression<RawServer>>,
-  RawReply extends FastifyReply<RawServer, RawRequestDefaultExpression<RawServer>, RawReplyDefaultExpression<RawServer>> = FastifyReply<RawServer, RawRequestDefaultExpression<RawServer>, RawReplyDefaultExpression<RawServer>>
+  RawRequest extends FastifyRequest<
+    RouteGenericInterface,
+    RawServer,
+    RawRequestDefaultExpression<RawServer>
+  > = FastifyRequest<
+    RouteGenericInterface,
+    RawServer,
+    RawRequestDefaultExpression<RawServer>
+  >,
+  RawReply extends FastifyReply<
+    RawServer,
+    RawRequestDefaultExpression<RawServer>,
+    RawReplyDefaultExpression<RawServer>
+  > = FastifyReply<
+    RawServer,
+    RawRequestDefaultExpression<RawServer>,
+    RawReplyDefaultExpression<RawServer>
+  >,
 > {
   serializers?: {
     req?: (req: RawRequest) => {

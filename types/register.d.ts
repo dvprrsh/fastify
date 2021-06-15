@@ -1,5 +1,9 @@
-import { FastifyPluginOptions, FastifyPluginCallback, FastifyPluginAsync } from './plugin'
-import { LogLevel } from './logger'
+import {
+  FastifyPluginAsync,
+  FastifyPluginCallback,
+  FastifyPluginOptions,
+} from "./plugin.d.ts";
+import { LogLevel } from "./logger.d.ts";
 
 interface RegisterOptions {
   prefix?: string;
@@ -7,7 +11,9 @@ interface RegisterOptions {
   logSerializers?: Record<string, (value: any) => string>;
 }
 
-export type FastifyRegisterOptions<Options> = (RegisterOptions & Options) | (() => RegisterOptions & Options)
+export type FastifyRegisterOptions<Options> =
+  | (RegisterOptions & Options)
+  | (() => RegisterOptions & Options);
 
 /**
  * FastifyRegister
@@ -17,14 +23,18 @@ export type FastifyRegisterOptions<Options> = (RegisterOptions & Options) | (() 
 export interface FastifyRegister<T = void> {
   <Options extends FastifyPluginOptions>(
     plugin: FastifyPluginCallback<Options>,
-    opts?: FastifyRegisterOptions<Options>
+    opts?: FastifyRegisterOptions<Options>,
   ): T;
   <Options extends FastifyPluginOptions>(
     plugin: FastifyPluginAsync<Options>,
-    opts?: FastifyRegisterOptions<Options>
+    opts?: FastifyRegisterOptions<Options>,
   ): T;
   <Options extends FastifyPluginOptions>(
-    plugin: FastifyPluginCallback<Options> | FastifyPluginAsync<Options> | Promise<{ default: FastifyPluginCallback<Options> }> | Promise<{ default: FastifyPluginAsync<Options> }>,
-    opts?: FastifyRegisterOptions<Options>
+    plugin:
+      | FastifyPluginCallback<Options>
+      | FastifyPluginAsync<Options>
+      | Promise<{ default: FastifyPluginCallback<Options> }>
+      | Promise<{ default: FastifyPluginAsync<Options> }>,
+    opts?: FastifyRegisterOptions<Options>,
   ): T;
 }

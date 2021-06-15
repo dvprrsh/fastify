@@ -1,4 +1,4 @@
-import { ContextConfigDefault } from './utils'
+import { ContextConfigDefault } from "./utils.d.ts";
 
 // eslint-disable-next-line @typescript-eslint/no-empty-interface
 export interface FastifyContextConfig {

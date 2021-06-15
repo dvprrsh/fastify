@@ -1,0 +1,19 @@
+{
+  "imports": {
+    "@fastify/ajv-compiler": "https://cdn.skypack.dev/@fastify/ajv-compiler@^1?dts",
+    "destr": "https://deno.land/x/destr@v1.0.0/src/index.ts",
+    "fast-json-stringify": "https://cdn.skypack.dev/fast-json-stringify@^2?dts",
+    "fastify-error": "https://cdn.skypack.dev/fastify-error@^0?dts",
+    "find_may_way": "https://cdn.skypack.dev/find-my-way@^4?dts",
+    "flatstr": "https://cdn.skypack.dev/flatstr@^1?dts",
+    "http/": "https://deno.land/std@0.98.0/http/",
+    "io/": "https://deno.land/std@0.98.0/io/",
+    "light-my-request": "https://cdn.skypack.dev/light-my-request@^4?dts",
+    "lru": "https://deno.land/x/lru@1.0.2/mod.ts",
+    "node/": "https://deno.land/std@0.98.0/node/",
+    "proxy_addr": "https://deno.land/x/proxy_addr@0.0.6/mod.ts",
+    "querystring": "https://cdn.skypack.dev/querystring@^0?dts",
+    "semver": "https://deno.land/x/semver@v1.4.0/mod.ts",
+    "testing/": "https://deno.land/std@0.98.0/testing/"
+  }
+}
