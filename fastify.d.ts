@@ -1,5 +1,6 @@
+// deno-lint-ignore-file no-explicit-any ban-types
+// import { ConstraintStrategy, HTTPVersion } from "find_my_way";
 import * as http from "http/mod.ts";
-import { ConstraintStrategy, HTTPVersion } from "find-my-way";
 import { FastifyRequest, RequestGenericInterface } from "./types/request.d.ts";
 import {
   RawReplyDefaultExpression,
@@ -13,15 +14,14 @@ import {
 } from "./types/logger.d.ts";
 import { FastifyInstance } from "./types/instance.d.ts";
 import { FastifyServerFactory } from "./types/serverFactory.d.ts";
-import { Options as AjvOptions } from "@fastify/ajv-compiler";
-import { FastifyError } from "fastify-error";
+import { Options as AjvOptions } from "fastify_ajv_compiler";
+import { FastifyError } from "fastify_error";
 import { FastifyReply } from "./types/reply.d.ts";
 import { FastifySchemaValidationError } from "./types/schema.d.ts";
 import {
   ConstructorAction,
   ProtoAction,
 } from "./types/content-type-parser.d.ts";
-import { Socket } from "net";
 
 /**
  * Fastify factory function for the standard fastify http, http, or http server instance.
@@ -109,7 +109,7 @@ export type FastifyHttpsOptions<
 };
 
 type FindMyWayVersion<RawServer extends RawServerBase> = RawServer extends
-  http.Server ? HTTPVersion.V1 : HTTPVersion.V2;
+  http.Server ? any /*HTTPVersion.V1*/ : any /*HTTPVersion.V2*/;
 
 export interface ConnectionError extends Error {
   code: string;
@@ -166,7 +166,7 @@ export type FastifyServerOptions<
     deriveVersion<Context>(req: Object, ctx?: Context): string; // not a fan of using Object here. Also what is Context? Can either of these be better defined?
   };
   constraints?: {
-    [name: string]: ConstraintStrategy<FindMyWayVersion<RawServer>>;
+    [name: string]: any /*ConstraintStrategy<FindMyWayVersion<RawServer>>*/;
   };
   return503OnClosing?: boolean;
   ajv?: {
@@ -196,12 +196,12 @@ export type FastifyServerOptions<
   /**
    * listener to error events emitted by client connections
    */
-  clientErrorHandler?: (error: ConnectionError, socket: Socket) => void;
+  clientErrorHandler?: (error: ConnectionError, socket: any /*Socket*/) => void;
 };
 
 type TrustProxyFunction = (address: string, hop: number) => boolean;
 
-declare module "fastify-error" {
+declare module "fastify_error" {
   interface FastifyError {
     validation?: ValidationResult[];
   }
@@ -221,7 +221,7 @@ export {
   Chain as LightMyRequestChain,
   InjectOptions,
   Response as LightMyRequestResponse,
-} from "light-my-request";
+} from "light_my_request";
 export { FastifyRequest, RequestGenericInterface } from "./types/request.d.ts";
 export { FastifyReply } from "./types/reply.d.ts";
 export {
@@ -256,7 +256,7 @@ export {
   hasContentTypeParser,
   ProtoAction,
 } from "./types/content-type-parser.d.ts";
-export { FastifyError } from "fastify-error";
+export { FastifyError } from "fastify_error";
 export { FastifySchema, FastifySchemaCompiler } from "./types/schema.d.ts";
 export {
   ContextConfigDefault,

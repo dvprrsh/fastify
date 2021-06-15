@@ -1,7 +1,6 @@
-'use strict';
-
-const Avvio = require('avvio');
-import querystring from 'querystring';
+"use strict";
+import Avvio from "avvio";
+import querystring from "querystring";
 
 let lightMyRequest;
 
@@ -24,35 +23,35 @@ import {
   kPluginNameChain,
   kSchemaErrorFormatter,
   kErrorHandler,
-} from './lib/symbols.js';
+} from "./lib/symbols.js";
 
-import { createServer } from './lib/server.js';
-import Reply from './lib/reply.js';
-import Request from './lib/request.js';
+import { createServer } from "./lib/server.js";
+import Reply from "./lib/reply.js";
+import Request from "./lib/request.js";
 const supportedMethods = [
-  'DELETE',
-  'GET',
-  'HEAD',
-  'PATCH',
-  'POST',
-  'PUT',
-  'OPTIONS',
+  "DELETE",
+  "GET",
+  "HEAD",
+  "PATCH",
+  "POST",
+  "PUT",
+  "OPTIONS",
 ];
-import decorator from './lib/decorate.js';
-import ContentTypeParser from './lib/contentTypeParser.js';
-import SchemaController from './lib/schema-controller.js';
-import { Hooks, hookRunnerApplication, supportedHooks } from './lib/hooks.js';
-import { createLogger } from './lib/logger.js';
-import pluginUtils from './lib/pluginUtils.js';
-import reqIdGenFactory from './lib/reqIdGenFactory.js';
-import { buildRouting, validateBodyLimitOption } from './lib/route.js';
-import build404 from './lib/fourOhFour.js';
-import getSecuredInitialConfig from './lib/initialConfigValidation.js';
-import override from './lib/pluginOverride.js';
-import warning from './lib/warnings.js';
+import decorator from "./lib/decorate.js";
+import ContentTypeParser from "./lib/contentTypeParser.js";
+import SchemaController from "./lib/schema-controller.js";
+import { Hooks, hookRunnerApplication, supportedHooks } from "./lib/hooks.js";
+import { createLogger } from "./lib/logger.js";
+import pluginUtils from "./lib/pluginUtils.js";
+import reqIdGenFactory from "./lib/reqIdGenFactory.js";
+import { buildRouting, validateBodyLimitOption } from "./lib/route.js";
+import build404 from "./lib/fourOhFour.js";
+import getSecuredInitialConfig from "./lib/initialConfigValidation.js";
+import override from "./lib/pluginOverride.js";
+import warning from "./lib/warnings.js";
 const { defaultInitOptions } = getSecuredInitialConfig;
 
-import { FST_ERR_BAD_URL, FST_ERR_MISSING_MIDDLEWARE } from './lib/errors.js';
+import { FST_ERR_BAD_URL, FST_ERR_MISSING_MIDDLEWARE } from "./lib/errors.js";
 
 const onBadUrlContext = {
   config: {},
@@ -64,7 +63,7 @@ function defaultBuildPrettyMeta(route) {
   // return a shallow copy of route's sanitized context
 
   const cleanKeys = {};
-  const allowedProps = ['errorHandler', 'logLevel', 'logSerializers'];
+  const allowedProps = ["errorHandler", "logLevel", "logSerializers"];
 
   allowedProps.concat(supportedHooks).forEach((k) => {
     cleanKeys[k] = route.store[k];
@@ -89,13 +88,13 @@ function fastify(options) {
   // Options validations
   options = options || {};
 
-  if (typeof options !== 'object') {
-    throw new TypeError('Options must be an object');
+  if (typeof options !== "object") {
+    throw new TypeError("Options must be an object");
   }
 
   if (
     options.querystringParser &&
-    typeof options.querystringParser !== 'function'
+    typeof options.querystringParser !== "function"
   ) {
     throw new Error(
       `querystringParser option should be a function, instead got '${typeof options.querystringParser}'`
@@ -105,7 +104,7 @@ function fastify(options) {
   if (
     options.schemaController &&
     options.schemaController.bucket &&
-    typeof options.schemaController.bucket !== 'function'
+    typeof options.schemaController.bucket !== "function"
   ) {
     throw new Error(
       `schemaController.bucket option should be a function, instead got '${typeof options
@@ -119,7 +118,7 @@ function fastify(options) {
     options.requestIdHeader || defaultInitOptions.requestIdHeader;
   const querystringParser = options.querystringParser || querystring.parse;
   const genReqId = options.genReqId || reqIdGenFactory();
-  const requestIdLogLabel = options.requestIdLogLabel || 'reqId';
+  const requestIdLogLabel = options.requestIdLogLabel || "reqId";
   const bodyLimit = options.bodyLimit || defaultInitOptions.bodyLimit;
   const disableRequestLogging = options.disableRequestLogging || false;
   const exposeHeadRoutes =
@@ -138,7 +137,7 @@ function fastify(options) {
   if (
     !ajvOptions.customOptions ||
     Object.prototype.toString.call(ajvOptions.customOptions) !==
-      '[object Object]'
+      "[object Object]"
   ) {
     throw new Error(
       `ajv.customOptions option should be an object, instead got '${typeof ajvOptions.customOptions}'`
@@ -173,17 +172,17 @@ function fastify(options) {
 
   let constraints = options.constraints;
   if (options.versioning) {
-    warning.emit('FSTDEP009');
+    warning.emit("FSTDEP009");
     constraints = {
       ...constraints,
       version: {
-        name: 'version',
+        name: "version",
         mustMatchWhenDerived: true,
         storage: options.versioning.storage,
         deriveConstraint: options.versioning.deriveVersion,
         validate(value) {
-          if (typeof value !== 'string') {
-            throw new Error('Version constraint should be a string.');
+          if (typeof value !== "string") {
+            throw new Error("Version constraint should be a string.");
           }
         },
       },
@@ -232,8 +231,8 @@ function fastify(options) {
     [kOptions]: options,
     [kChildren]: [],
     [kBodyLimit]: bodyLimit,
-    [kRoutePrefix]: '',
-    [kLogLevel]: '',
+    [kRoutePrefix]: "",
+    [kLogLevel]: "",
     [kLogSerializers]: null,
     [kHooks]: new Hooks(),
     [kSchemaController]: schemaController,
@@ -258,25 +257,25 @@ function fastify(options) {
     setDefaultRoute: router.setDefaultRoute.bind(router),
     // routes shorthand methods
     delete: function _delete(url, opts, handler) {
-      return router.prepareRoute.call(this, 'DELETE', url, opts, handler);
+      return router.prepareRoute.call(this, "DELETE", url, opts, handler);
     },
     get: function _get(url, opts, handler) {
-      return router.prepareRoute.call(this, 'GET', url, opts, handler);
+      return router.prepareRoute.call(this, "GET", url, opts, handler);
     },
     head: function _head(url, opts, handler) {
-      return router.prepareRoute.call(this, 'HEAD', url, opts, handler);
+      return router.prepareRoute.call(this, "HEAD", url, opts, handler);
     },
     patch: function _patch(url, opts, handler) {
-      return router.prepareRoute.call(this, 'PATCH', url, opts, handler);
+      return router.prepareRoute.call(this, "PATCH", url, opts, handler);
     },
     post: function _post(url, opts, handler) {
-      return router.prepareRoute.call(this, 'POST', url, opts, handler);
+      return router.prepareRoute.call(this, "POST", url, opts, handler);
     },
     put: function _put(url, opts, handler) {
-      return router.prepareRoute.call(this, 'PUT', url, opts, handler);
+      return router.prepareRoute.call(this, "PUT", url, opts, handler);
     },
     options: function _options(url, opts, handler) {
-      return router.prepareRoute.call(this, 'OPTIONS', url, opts, handler);
+      return router.prepareRoute.call(this, "OPTIONS", url, opts, handler);
     },
     all: function _all(url, opts, handler) {
       return router.prepareRoute.call(
@@ -346,7 +345,7 @@ function fastify(options) {
     pluginName: {
       get() {
         if (this[kPluginNameChain].length > 1) {
-          return this[kPluginNameChain].join(' -> ');
+          return this[kPluginNameChain].join(" -> ");
         }
         return this[kPluginNameChain][0];
       },
@@ -394,18 +393,18 @@ function fastify(options) {
     autostart: false,
     timeout: Number(options.pluginTimeout) || defaultInitOptions.pluginTimeout,
     expose: {
-      use: 'register',
+      use: "register",
     },
   });
   // Override to allow the plugin encapsulation
   avvio.override = override;
-  avvio.on('start', () => (fastify[kState].started = true));
+  avvio.on("start", () => (fastify[kState].started = true));
   fastify[kAvvioBoot] = fastify.ready; // the avvio ready function
   fastify.ready = ready; // overwrite the avvio ready function
   fastify.printPlugins = avvio.prettyPrint.bind(avvio);
 
   // cache the closing value, since we are checking it in an hot path
-  avvio.once('preReady', () => {
+  avvio.once("preReady", () => {
     fastify.onClose((instance, done) => {
       fastify[kState].closing = true;
       router.closeRoutes();
@@ -432,7 +431,7 @@ function fastify(options) {
   });
 
   // Delay configuring clientError handler so that it can access fastify state.
-  server.on('clientError', options.clientErrorHandler.bind(fastify));
+  server.on("clientError", options.clientErrorHandler.bind(fastify));
 
   return fastify;
 
@@ -447,13 +446,13 @@ function fastify(options) {
     // lightMyRequest is dynamically laoded as it seems very expensive
     // because of Ajv
     if (lightMyRequest === undefined) {
-      lightMyRequest = require('light-my-request');
+      lightMyRequest = require("light_my_request");
     }
 
     if (fastify[kState].started) {
       if (fastify[kState].closing) {
         // Force to return an error
-        const error = new Error('Server is closed');
+        const error = new Error("Server is closed");
         if (cb) {
           cb(error);
           return;
@@ -473,7 +472,7 @@ function fastify(options) {
       return lightMyRequest((req, res) => {
         this.ready(function (err) {
           if (err) {
-            res.emit('error', err);
+            res.emit("error", err);
             return;
           }
           httpHandler(req, res);
@@ -503,7 +502,7 @@ function fastify(options) {
           manageErr(err);
         } else {
           hookRunnerApplication(
-            'onReady',
+            "onReady",
             fastify[kAvvioBoot],
             fastify,
             manageErr
@@ -540,33 +539,33 @@ function fastify(options) {
     );
 
     if (
-      name === 'onSend' ||
-      name === 'preSerialization' ||
-      name === 'onError'
+      name === "onSend" ||
+      name === "preSerialization" ||
+      name === "onError"
     ) {
-      if (fn.constructor.name === 'AsyncFunction' && fn.length === 4) {
+      if (fn.constructor.name === "AsyncFunction" && fn.length === 4) {
         throw new Error(
           "Async function has too many arguments. Async hooks should not use the 'done' argument."
         );
       }
-    } else if (name === 'onReady') {
-      if (fn.constructor.name === 'AsyncFunction' && fn.length !== 0) {
+    } else if (name === "onReady") {
+      if (fn.constructor.name === "AsyncFunction" && fn.length !== 0) {
         throw new Error(
           "Async function has too many arguments. Async hooks should not use the 'done' argument."
         );
       }
-    } else if (name !== 'preParsing') {
-      if (fn.constructor.name === 'AsyncFunction' && fn.length === 3) {
+    } else if (name !== "preParsing") {
+      if (fn.constructor.name === "AsyncFunction" && fn.length === 3) {
         throw new Error(
           "Async function has too many arguments. Async hooks should not use the 'done' argument."
         );
       }
     }
 
-    if (name === 'onClose') {
+    if (name === "onClose") {
       this[kHooks].validate(name, fn);
       this.onClose(fn);
-    } else if (name === 'onReady') {
+    } else if (name === "onReady") {
       this[kHooks].validate(name, fn);
       this[kHooks].add(name, fn);
     } else {
@@ -597,20 +596,20 @@ function fastify(options) {
     // In case of a connection reset, the socket has been destroyed and there is nothing that needs to be done.
     // https://github.com/fastify/fastify/issues/2036
     // https://github.com/nodejs/node/issues/33302
-    if (err.code === 'ECONNRESET') {
+    if (err.code === "ECONNRESET") {
       return;
     }
 
     const body = JSON.stringify({
       error: 400,
-      message: 'Client Error',
+      message: "Client Error",
       statusCode: 400,
     });
 
     // Most devs do not know what to do with this error.
     // In the vast majority of cases, it's a network error and/or some
     // config issue on the load balancer side.
-    this.log.trace({ err }, 'client error');
+    this.log.trace({ err }, "client error");
 
     // If the socket is not writable, there is no reason to try to send data.
     if (socket.writable) {
@@ -623,8 +622,8 @@ function fastify(options) {
   // If the router does not match any route, every request will land here
   // req and res are Node.js core objects
   function defaultRoute(req, res) {
-    if (req.headers['accept-version'] !== undefined) {
-      req.headers['accept-version'] = undefined;
+    if (req.headers["accept-version"] !== undefined) {
+      req.headers["accept-version"] = undefined;
     }
     fourOhFour.router.lookup(req, res);
   }
@@ -634,7 +633,7 @@ function fastify(options) {
       const id = genReqId(req);
       const childLogger = logger.child({ reqId: id });
 
-      childLogger.info({ req }, 'incoming request');
+      childLogger.info({ req }, "incoming request");
 
       const request = new Request(
         id,
@@ -649,8 +648,8 @@ function fastify(options) {
     }
     const body = `{"error":"Bad Request","message":"'${path}' is not a valid url component","statusCode":400}`;
     res.writeHead(400, {
-      'Content-Type': 'application/json',
-      'Content-Length': body.length,
+      "Content-Type": "application/json",
+      "Content-Length": body.length,
     });
     res.end(body);
   }
@@ -741,13 +740,13 @@ function fastify(options) {
 }
 
 function validateSchemaErrorFormatter(schemaErrorFormatter) {
-  if (typeof schemaErrorFormatter !== 'function') {
+  if (typeof schemaErrorFormatter !== "function") {
     throw new Error(
       `schemaErrorFormatter option should be a function, instead got ${typeof schemaErrorFormatter}`
     );
-  } else if (schemaErrorFormatter.constructor.name === 'AsyncFunction') {
+  } else if (schemaErrorFormatter.constructor.name === "AsyncFunction") {
     throw new Error(
-      'schemaErrorFormatter option should not be an async function'
+      "schemaErrorFormatter option should not be an async function"
     );
   }
 }
@@ -760,8 +759,8 @@ function wrapRouting(httpHandler, { rewriteUrl, logger }) {
     const originalUrl = req.url;
     const url = rewriteUrl(req);
     if (originalUrl !== url) {
-      logger.debug({ originalUrl, url }, 'rewrite url');
-      if (typeof url === 'string') {
+      logger.debug({ originalUrl, url }, "rewrite url");
+      if (typeof url === "string") {
         req.url = url;
       } else {
         req.destroy(

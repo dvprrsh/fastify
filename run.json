@@ -1,0 +1,6 @@
+{
+  "scripts": {
+    "build": "deno bundle --import-map=./import_map.json fastify.js",
+    "postinstall": "deno cache --lock=./lock.json --lock-write --import-map=./import_map.json lib/*"
+  }
+}
